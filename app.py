@@ -19,7 +19,20 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from io import BytesIO
+from dotenv import load_dotenv
+load_dotenv()
 
+import os
+import mysql.connector
+
+def get_db_connection():
+    return mysql.connector.connect(
+        host=os.getenv("MYSQLHOST"),
+        user=os.getenv("MYSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
+        port=os.getenv("MYSQLPORT")
+    )
 
 
 app = Flask(__name__)
