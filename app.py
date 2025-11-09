@@ -6,8 +6,8 @@ import os
 import random, string
 import smtplib
 from email.message import EmailMessage
-import pywhatkit as kit
-import pyautogui
+# import pywhatkit as kit
+# import pyautogui
 import time
 from flask import Flask, request, jsonify
 import mysql.connector
@@ -136,9 +136,9 @@ def send_email(receiver_email, subject, body):
 
 def send_whatsapp_msg(phone):
     try:
-        kit.sendwhatmsg_instantly(f"+91{phone}", "🎉 Welcome to Airline Management System!")
+        #kit.sendwhatmsg_instantly(f"+91{phone}", "🎉 Welcome to Airline Management System!")
         time.sleep(5)
-        pyautogui.press("enter")
+        #pyautogui.press("enter")
         print(f"✅ WhatsApp message sent to {phone}")
     except Exception as e:
         print(f"❌ Failed to send WhatsApp message: {e}")
