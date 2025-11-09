@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-red-50 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+        <h1 class="text-2xl font-bold text-red-600 mb-4">Booking Confirmed!</h1>
+        <p class="text-gray-700 mb-2">Hello, <span class="font-semibold">{{ user }}</span></p>
+        <p class="text-gray-700 mb-4">You have successfully booked flight <span class="font-semibold">{{ flight.flight_no }}</span> with <span class="font-semibold">{{ flight.airline }}</span>.</p>
+        <p class="text-gray-600 mb-6">From: {{ flight.source }} → To: {{ flight.destination }}<br>
+        Departure: {{ flight.departure_time }} | Arrival: {{ flight.arrival_time }}<br>
+        Price: ₹{{ flight.price }}</p>
+        <a href="{{ url_for('dashboard') }}" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700">Back to Dashboard</a>
+    </div>
+</body>
+</html>

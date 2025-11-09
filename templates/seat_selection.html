@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Your Seat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .seat {
+            width: 45px;
+            height: 45px;
+            margin: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .seat.available {
+            background: #10b981;
+            color: white;
+        }
+        .seat.available:hover {
+            background: #059669;
+            transform: scale(1.1);
+        }
+        .seat.booked {
+            background: #ef4444;
+            color: white;
+            cursor: not-allowed;
+        }
+        .seat.selected {
+            background: #3b82f6;
+            color: white;
+            transform: scale(1.15);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+        .seat-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .aisle {
+            width: 30px;
+        }
+    </style>
+</head>
+<body class="bg-red-50">
+    <div class="min-h-screen py-12 px-4">
+        <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
+
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Select Your Seat</h1>
+                <p class="text-gray-600">Flight: <span id="flightNo" class="font-bold text-red-600"></span></p>
+                <p class="text-gray-600">Class: <span id="className" class="font-bold"></span></p>
+            </div>
+
+            <!-- Legend -->
+            <div class="flex justify-center gap-8 mb-8 p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-green-500 rounded"></div>
+                    <span class="text-sm">Available</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-500 rounded"></div>
+                    <span class="text-sm">Selected</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-red-500 rounded"></div>
+                    <span class="text-sm">Booked</span>
+                </div>
+            </div>
+
+            <!-- Airplane Nose -->
+            <div class="text-center mb-4">
+                <div class="inline-block px-8 py-2 bg-gray-300 rounded-t-full">
+                    <span class="text-2xl">✈️</span>
+                </div>
+            </div>
+
+            <!-- Seat Map -->
+            <div id="seatMap" class="mb-8 p-6 bg-gradient-to-b from-gray-100 to-gray-50 rounded-lg">
+                <p class="text-center text-gray-500">Loading seats...</p>
+            </div>
+
+            <!-- Selected Seat Info -->
+            <div id="selectedInfo" class="hidden mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                <p class="text-blue-800">
+                    <span class="font-semibold">Selected Seat:</span>
+                    <span id="selectedSeat" class="text-xl font-bold"></span>
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-4">
+                <a href="{{ url_for('dashboard') }}"
+                   class="flex-1 py-3 px-6 border border-gray-300 rounded-lg text-center font-medium text-gray-700 hover:bg-gray-50 transition">
+                    Cancel
+                </a>
+                <button id="confirmBtn" disabled
+                        class="flex-1 py-3 px-6 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
+                    Confirm & Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const flightId = {{ flight_id }};
+        const selectedClass = "{{ selected_class }}";
+        let selectedSeatId = null;
+        let selectedSeatNumber = null;
+
+        document.getElementById('flightNo').textContent = "{{ flight_no }}";
+        document.getElementById('className').textContent = selectedClass;
+
+        // Load seats
+        async function loadSeats() {
+            try {
+                const response = await fetch(`/api/seats/${flightId}?class=${selectedClass}`);
+                const seats = await response.json();
+
+                const seatMap = document.getElementById('seatMap');
+                seatMap.innerHTML = '';
+
+                // Group seats by row
+                const rows = {};
+                seats.forEach(seat => {
+                    const row = seat.seat_number.match(/\d+/)[0];
+                    if (!rows[row]) rows[row] = [];
+                    rows[row].push(seat);
+                });
+
+                // Render seats
+                Object.keys(rows).sort((a, b) => parseInt(a) - parseInt(b)).forEach(rowNum => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'seat-row';
+
+                    rows[rowNum].forEach((seat, index) => {
+                        const seatDiv = document.createElement('div');
+                        seatDiv.className = `seat ${seat.is_booked ? 'booked' : 'available'}`;
+                        seatDiv.textContent = seat.seat_number;
+                        seatDiv.dataset.seatId = seat.seat_id;
+                        seatDiv.dataset.seatNumber = seat.seat_number;
+
+                        if (!seat.is_booked) {
+                            seatDiv.onclick = () => selectSeat(seat.seat_id, seat.seat_number, seatDiv);
+                        }
+
+                        rowDiv.appendChild(seatDiv);
+
+                        // Add aisle for economy (after C and before D)
+                        if (selectedClass === 'Economy' && index === 2) {
+                            const aisle = document.createElement('div');
+                            aisle.className = 'aisle';
+                            rowDiv.appendChild(aisle);
+                        }
+                    });
+
+                    seatMap.appendChild(rowDiv);
+                });
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('seatMap').innerHTML = '<p class="text-red-500 text-center">Error loading seats</p>';
+            }
+        }
+
+        function selectSeat(seatId, seatNumber, element) {
+            // Deselect previous
+            document.querySelectorAll('.seat.selected').forEach(s => {
+                s.classList.remove('selected');
+                s.classList.add('available');
+            });
+
+            // Select new
+            element.classList.remove('available');
+            element.classList.add('selected');
+
+            selectedSeatId = seatId;
+            selectedSeatNumber = seatNumber;
+
+            // Show selected info
+            document.getElementById('selectedInfo').classList.remove('hidden');
+            document.getElementById('selectedSeat').textContent = seatNumber;
+            document.getElementById('confirmBtn').disabled = false;
+        }
+
+        // Confirm button - redirect to booking page with seat parameter
+        document.getElementById('confirmBtn').onclick = () => {
+            if (selectedSeatNumber) {
+                const classLower = selectedClass.toLowerCase();
+                window.location.href = `/book/${flightId}?class=${classLower}&seat=${selectedSeatNumber}`;
+            } else {
+                alert('Please select a seat first!');
+            }
+        };
+
+        // Load seats on page load
+        loadSeats();
+    </script>
+</body>
+</html>

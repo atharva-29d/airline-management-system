@@ -1,0 +1,14 @@
+body {
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.sidebar-link {
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Style for the active sidebar link */
+.sidebar-link.active {
+    background-color: #fee2e2; /* red-100 */
+    color: #dc2626; /* red-600 */
+    border-right: 4px solid #dc2626;
+}
